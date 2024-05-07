@@ -238,12 +238,26 @@ module.exports.process = function respond () {
 
 async function getUserFromJwt (token: string): Promise<User | null> {
   return await new Promise((resolve) => {
-    jwt.verify(token, security.publicKey, (err: VerifyErrors | null, decoded: JwtPayload | string | undefined) => {
-      if (err !== null || !decoded || isString(decoded)) {
-        resolve(null)
-      } else {
-        resolve(decoded.data)
-      }
-    })
+    console.log(token)
+    // eslint-disable-next-line eqeqeq
+    if (token !== undefined && JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString('utf-8')).alg == 'RS256') {
+      // jwt.verify(token, security.publicKey, { algorithms: ['RS256'] }, (err: VerifyErrors | null, decoded: JwtPayload | string | undefined) => {
+      // TODO to nie dzialalo inaczej
+
+      jwt.verify(token, security.publicKey, { algorithms: ['RS256'] }, (err, decoded) => {
+        if (err) {
+          console.error('JWT verification failed:', err.message)
+          resolve(null)
+        } else {
+          if (err !== null || !decoded || isString(decoded)) {
+            resolve(null)
+          } else {
+            resolve(decoded.data)
+          }
+        }
+      })
+    } else {
+      resolve(null)
+    }
   })
 }

@@ -3,16 +3,17 @@
  * SPDX-License-Identifier: MIT
  */
 
-import { FeedbackService } from '../Services/feedback.service'
-import { CaptchaService } from '../Services/captcha.service'
-import { UserService } from '../Services/user.service'
-import { UntypedFormControl, Validators } from '@angular/forms'
-import { Component, type OnInit } from '@angular/core'
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faPaperPlane, faStar } from '@fortawesome/free-solid-svg-icons'
-import { FormSubmitService } from '../Services/form-submit.service'
-import { TranslateService } from '@ngx-translate/core'
-import { SnackBarHelperService } from '../Services/snack-bar-helper.service'
+import {FeedbackService} from '../Services/feedback.service'
+import {CaptchaService} from '../Services/captcha.service'
+import {DomSanitizer} from '@angular/platform-browser'
+import {UserService} from '../Services/user.service'
+import {UntypedFormControl, Validators} from '@angular/forms'
+import {Component, type OnInit, SecurityContext} from '@angular/core'
+import {library} from '@fortawesome/fontawesome-svg-core'
+import {faPaperPlane, faStar} from '@fortawesome/free-solid-svg-icons'
+import {FormSubmitService} from '../Services/form-submit.service'
+import {TranslateService} from '@ngx-translate/core'
+import {SnackBarHelperService} from '../Services/snack-bar-helper.service'
 
 library.add(faStar, faPaperPlane)
 
@@ -33,7 +34,7 @@ export class ContactComponent implements OnInit {
   public confirmation: any
   public error: any
 
-  constructor (private readonly userService: UserService, private readonly captchaService: CaptchaService, private readonly feedbackService: FeedbackService,
+  constructor (private readonly sanitizer: DomSanitizer, private readonly userService: UserService, private readonly captchaService: CaptchaService, private readonly feedbackService: FeedbackService,
     private readonly formSubmitService: FormSubmitService, private readonly translate: TranslateService, private readonly snackBarHelperService: SnackBarHelperService) { }
 
   ngOnInit () {
@@ -48,8 +49,9 @@ export class ContactComponent implements OnInit {
       console.log(err)
     })
     this.getNewCaptcha()
-
+    console.log("START")
     this.formSubmitService.attachEnterKeyHandler('feedback-form', 'submitButton', () => { this.save() })
+    console.log(this.feedback)
   }
 
   getNewCaptcha () {
@@ -63,7 +65,12 @@ export class ContactComponent implements OnInit {
     this.feedback.captchaId = this.captchaId
     this.feedback.captcha = this.captchaControl.value
     // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-    this.feedback.comment = `${this.feedbackControl.value} (${this.authorControl.value})`
+    console.log("AA")
+    console.log(this.feedbackControl.value)
+    console.log("BB")
+    console.log(this.authorControl.value)
+    const asd = this.sanitizer.sanitize(SecurityContext.HTML, this.feedbackControl.value)
+    this.feedback.comment = `${asd} (${this.authorControl.value})`
     this.feedback.rating = this.rating
     this.feedback.UserId = this.userIdControl.value
     this.feedbackService.save(this.feedback).subscribe((savedFeedback) => {
